@@ -483,7 +483,9 @@
             serverUrl = url;
             showLoading(true, 'Conectando...');
             try {
-                const test = await fetch(serverUrl + '/api/catalog');
+                const test = await fetch(serverUrl + '/api/catalog', {
+                    headers: { 'Bypass-Tunnel-Reminder': 'true' }
+                });
                 if (!test.ok) throw new Error('Servidor no responde');
 
                 localStorage.setItem('distriluk_server_url', serverUrl);
@@ -504,7 +506,11 @@
         }
 
         async function fetchData(endpoint) {
-            const res = await fetch(serverUrl + '/api/' + endpoint);
+            const res = await fetch(serverUrl + '/api/' + endpoint, {
+                headers: {
+                    'Bypass-Tunnel-Reminder': 'true'
+                }
+            });
             return await res.json();
         }
 
@@ -599,7 +605,10 @@
             showLoading(true, 'Iniciando sincronización...');
             const res = await fetch(serverUrl + '/api/sync', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Bypass-Tunnel-Reminder': 'true'
+                },
                 body: JSON.stringify({ rubros })
             });
             const data = await res.json();
@@ -610,7 +619,10 @@
         async function startIntegrity() {
             if (!confirm('¿Iniciar verificación de imágenes en la PC?')) return;
             showLoading(true, 'Iniciando integridad...');
-            const res = await fetch(serverUrl + '/api/integrity', { method: 'POST' });
+            const res = await fetch(serverUrl + '/api/integrity', {
+                method: 'POST',
+                headers: { 'Bypass-Tunnel-Reminder': 'true' }
+            });
             const data = await res.json();
             showLoading(false);
             alert(data.message);
@@ -703,7 +715,10 @@
             try {
                 const res = await fetch(serverUrl + '/api/pdf', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Bypass-Tunnel-Reminder': 'true'
+                    },
                     body: JSON.stringify({ items, rubros, name: 'Catalogo_Seleccion' })
                 });
 
@@ -732,7 +747,10 @@
                 const items = allProducts.filter(p => rubros.includes(p.categoria));
                 const res = await fetch(serverUrl + '/api/pdf', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Bypass-Tunnel-Reminder': 'true'
+                    },
                     body: JSON.stringify({ items, rubros, name: 'Catalogo_Rubros' })
                 });
 
@@ -758,7 +776,9 @@
 
             showLoading(true, 'Generando PDF del rubro...');
             try {
-                const res = await fetch(serverUrl + '/api/pdf/category/' + encodeURIComponent(r));
+                const res = await fetch(serverUrl + '/api/pdf/category/' + encodeURIComponent(r), {
+                    headers: { 'Bypass-Tunnel-Reminder': 'true' }
+                });
                 if (!res.ok) throw new Error('Error al descargar PDF');
 
                 const blob = await res.blob();

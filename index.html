@@ -168,6 +168,12 @@
             text-align: center;
             position: relative;
             border: 1px solid #f1f5f9;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .p-card:active {
+            transform: scale(0.98);
         }
 
         .p-card img {
@@ -176,6 +182,7 @@
             object-fit: contain;
             margin-bottom: 8px;
             border-radius: 8px;
+            background: #fff;
         }
 
         .p-card .name {
@@ -511,8 +518,9 @@
         let serverUrl = localStorage.getItem('distriluk_server_url') || '';
 
         // Si se accede directamente desde el servidor, usar la URL actual
-        if (!serverUrl && (window.location.port === '3000' || window.location.hostname.includes('loca.lt'))) {
+        if (window.location.port === '3000' || window.location.hostname.includes('loca.lt')) {
             serverUrl = window.location.origin;
+            localStorage.setItem('distriluk_server_url', serverUrl);
         }
 
         let allProducts = [];
@@ -560,37 +568,43 @@
                     'Bypass-Tunnel-Reminder': 'true'
                 }
             });
+            if (!res.ok) throw new Error('Error al obtener datos');
             return await res.json();
         }
 
         async function init() {
-            // Si ya tenemos URL (o estamos en el mismo host), intentar conectar automáticamente
-            if (serverUrl) {
-                try {
-                    const test = await fetch(serverUrl + '/api/catalog', {
-                        headers: { 'Bypass-Tunnel-Reminder': 'true' }
-                    });
-                    if (test.ok) {
-                        document.getElementById('status-dot').style.background = 'var(--success)';
-                        document.getElementById('main-nav').style.display = 'flex';
-                        document.getElementById('view-connect').classList.remove('active');
-                        document.getElementById('view-dashboard').classList.add('active');
-                    }
-                } catch (e) {
-                    console.log('Auto-connect falló');
-                }
-            }
+            if (!serverUrl) return;
 
+            showLoading(true, 'Sincronizando con PC...');
             try {
-                allProducts = await fetchData('catalog');
-                allRubros = await fetchData('rubros');
-                updateStats();
-                populateFilters();
-                renderCatalog();
-                renderSyncList();
+                const test = await fetch(serverUrl + '/api/catalog', {
+                    headers: { 'Bypass-Tunnel-Reminder': 'true' }
+                });
+
+                if (test.ok) {
+                    document.getElementById('status-dot').style.background = 'var(--success)';
+                    document.getElementById('main-nav').style.display = 'flex';
+                    document.getElementById('view-connect').classList.remove('active');
+                    document.getElementById('view-dashboard').classList.add('active');
+
+                    allProducts = await fetchData('catalog');
+                    allRubros = await fetchData('rubros');
+                    updateStats();
+                    populateFilters();
+                    renderCatalog();
+                    renderSyncList();
+                } else {
+                    throw new Error('Servidor no disponible');
+                }
             } catch (e) {
                 console.error('Error init:', e);
+                // Si falla el auto-connect y no estamos en la vista de conexión, mostrarla
+                if (!document.getElementById('view-connect').classList.contains('active')) {
+                    alert('Se perdió la conexión con la PC. Por favor vuelve a conectar.');
+                    disconnect();
+                }
             }
+            showLoading(false);
         }
 
         function showLoading(show, text = 'Cargando...') {

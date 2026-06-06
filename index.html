@@ -385,8 +385,13 @@
         <!-- SYNC VIEW -->
         <div id="view-sync" class="view">
             <h2 style="margin-top:0">Descargar por Rubro</h2>
-            <div class="card" style="padding:0">
-                <div id="sync-rubro-list" style="max-height: 400px; overflow-y: auto;">
+            <div class="card">
+                <label
+                    style="display:flex; align-items:center; gap:10px; cursor:pointer; margin-bottom:15px; font-weight:600;">
+                    <input type="checkbox" id="remote-skip-images" style="width:20px; height:20px; margin:0;">
+                    Sincronización Inteligente (Solo precios)
+                </label>
+                <div id="sync-rubro-list" style="max-height: 400px; overflow-y: auto; border-top: 1px solid #eee;">
                     <!-- Rubros list -->
                 </div>
             </div>
@@ -466,11 +471,17 @@
 
     <script>
         let serverUrl = localStorage.getItem('distriluk_server_url') || '';
+
+        // Si se accede directamente desde el servidor, usar la URL actual
+        if (!serverUrl && (window.location.port === '3000' || window.location.hostname.includes('loca.lt'))) {
+            serverUrl = window.location.origin;
+        }
+
         let allProducts = [];
         let allRubros = [];
         let selectedCodes = new Set();
 
-        if (serverUrl) {
+        if (serverUrl && document.getElementById('server-url-input')) {
             document.getElementById('server-url-input').value = serverUrl;
         }
 
@@ -515,6 +526,23 @@
         }
 
         async function init() {
+            // Si ya tenemos URL (o estamos en el mismo host), intentar conectar automáticamente
+            if (serverUrl) {
+                try {
+                    const test = await fetch(serverUrl + '/api/catalog', {
+                        headers: { 'Bypass-Tunnel-Reminder': 'true' }
+                    });
+                    if (test.ok) {
+                        document.getElementById('status-dot').style.background = 'var(--success)';
+                        document.getElementById('main-nav').style.display = 'flex';
+                        document.getElementById('view-connect').classList.remove('active');
+                        document.getElementById('view-dashboard').classList.add('active');
+                    }
+                } catch (e) {
+                    console.log('Auto-connect falló');
+                }
+            }
+
             try {
                 allProducts = await fetchData('catalog');
                 allRubros = await fetchData('rubros');
@@ -600,20 +628,25 @@
             const rubros = Array.from(document.querySelectorAll('#sync-rubro-list input:checked')).map(i => i.value);
             if (rubros.length === 0) return alert('Selecciona al menos un rubro');
 
-            if (!confirm('¿Iniciar descarga en la PC?')) return;
+            const skipImages = document.getElementById('remote-skip-images').checked;
+            if (!confirm(`¿Iniciar sincronización ${skipImages ? 'rápida (solo precios)' : 'completa'} en la PC?`)) return;
 
             showLoading(true, 'Iniciando sincronización...');
-            const res = await fetch(serverUrl + '/api/sync', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Bypass-Tunnel-Reminder': 'true'
-                },
-                body: JSON.stringify({ rubros })
-            });
-            const data = await res.json();
+            try {
+                const res = await fetch(serverUrl + '/api/sync', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Bypass-Tunnel-Reminder': 'true'
+                    },
+                    body: JSON.stringify({ rubros, skipImages })
+                });
+                const data = await res.json();
+                alert(data.message);
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
             showLoading(false);
-            alert(data.message);
         }
 
         async function startIntegrity() {

@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Panel Remoto Distriluk (GitHub)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #64748b;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --dark: #0f172a;
+            --light: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background: #f1f5f9;
+            color: #1e293b;
+            padding-bottom: 70px;
+        }
+
+        header {
+            background: var(--dark);
+            color: white;
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .container {
+            padding: 16px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .view {
+            display: none;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-outline {
+            background: white;
+            border: 1px solid #e2e8f0;
+            color: var(--secondary);
+        }
+
+        /* Bottom Nav */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            border-top: 1px solid #e2e8f0;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #94a3b8;
+            font-size: 0.65rem;
+            font-weight: 600;
+            gap: 4px;
+            flex: 1;
+            text-decoration: none;
+        }
+
+        .nav-item i {
+            font-size: 1.25rem;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        /* Grid */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .p-card {
+            background: white;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            position: relative;
+            border: 1px solid #f1f5f9;
+        }
+
+        .p-card img {
+            width: 100%;
+            height: 120px;
+            object-fit: contain;
+            margin-bottom: 8px;
+            border-radius: 8px;
+        }
+
+        .p-card .name {
+            font-size: 0.75rem;
+            font-weight: 700;
+            height: 2.6em;
+            overflow: hidden;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .p-card .price {
+            color: var(--danger);
+            font-weight: 800;
+            font-size: 1rem;
+        }
+
+        .p-card .code {
+            font-size: 0.65rem;
+            color: var(--secondary);
+            margin-bottom: 4px;
+        }
+
+        .p-card.selected {
+            border: 2px solid var(--primary);
+            background: #eff6ff;
+        }
+
+        .select-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--primary);
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+        }
+
+        .p-card.selected .select-badge {
+            display: flex;
+        }
+
+        /* Inputs */
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            outline: none;
+            background: white;
+        }
+
+        .rubro-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .rubro-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin: 0;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-box .val {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .stat-box .lab {
+            font-size: 0.7rem;
+            color: var(--secondary);
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            background: #f8fafc;
+            color: var(--secondary);
+            font-weight: 700;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        #loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div id="loading-text">Cargando...</div>
+    </div>
+
+    <header>
+        <h1>DISTRIBUIDORA LUK</h1>
+        <div id="status-dot" style="width:10px; height:10px; background:var(--danger); border-radius:50%;"></div>
+    </header>
+
+    <div class="container">
+        <!-- CONNECTION VIEW -->
+        <div id="view-connect" class="view active">
+            <h2 style="margin-top:0">Conectar al Servidor</h2>
+            <div class="card">
+                <p>Ingresa la dirección IP o URL que aparece en la aplicación de tu PC.</p>
+                <input type="text" id="server-url-input" placeholder="Ej: http://192.168.1.10:3000" value="">
+                <button class="btn btn-primary" onclick="connect()">CONECTAR AHORA</button>
+                <p style="font-size: 0.8rem; color: var(--secondary); margin-top: 15px;">
+                    Nota: Asegúrate de que el servidor esté encendido en la PC.
+                </p>
+            </div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="view-dashboard" class="view">
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="val" id="stat-total">0</div>
+                    <div class="lab">Productos</div>
+                </div>
+                <div class="stat-box">
+                    <div class="val" id="stat-rubros">0</div>
+                    <div class="lab">Rubros</div>
+                </div>
+            </div>
+            <div class="card">
+                <h3 style="margin-top:0">Acciones del Sistema</h3>
+                <button class="btn btn-primary" onclick="switchView('sync')" style="margin-bottom:12px">
+                    <i class="fas fa-sync"></i> Sincronizar Catálogo
+                </button>
+                <button class="btn btn-outline" onclick="startIntegrity()">
+                    <i class="fas fa-shield-alt"></i> Verificar Integridad
+                </button>
+                <button class="btn btn-danger" onclick="disconnect()" style="margin-top: 12px">
+                    <i class="fas fa-sign-out-alt"></i> Desconectar
+                </button>
+            </div>
+        </div>
+
+        <!-- SYNC VIEW -->
+        <div id="view-sync" class="view">
+            <h2 style="margin-top:0">Descargar por Rubro</h2>
+            <div class="card" style="padding:0">
+                <div id="sync-rubro-list" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Rubros list -->
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+                <button class="btn btn-success" onclick="startSync()">
+                    <i class="fas fa-sync"></i> ACTUALIZAR PC
+                </button>
+                <button class="btn btn-primary" onclick="downloadSelectedRubrosPdf()">
+                    <i class="fas fa-file-pdf"></i> BAJAR PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- CATALOG VIEW -->
+        <div id="view-catalog" class="view">
+            <input type="text" id="catalog-q" placeholder="Buscar por nombre o código..." oninput="renderCatalog()">
+            <div style="display:flex; gap:8px; margin-bottom:12px">
+                <select id="catalog-rubro" onchange="renderCatalog()" style="margin-bottom:0; flex-grow:1">
+                    <option value="">Todos los rubros</option>
+                </select>
+                <button class="btn btn-primary" onclick="downloadCurrentRubroPdf()" style="width:auto; padding:0 15px">
+                    <i class="fas fa-file-pdf"></i>
+                </button>
+            </div>
+            <div class="product-grid" id="catalog-grid"></div>
+        </div>
+
+        <!-- REPORTS VIEW -->
+        <div id="view-reports" class="view">
+            <h2 style="margin-top:0">Informes de Cambios</h2>
+            <div id="reports-list"></div>
+            <div id="report-detail" style="display:none">
+                <button class="btn btn-outline" onclick="closeReport()" style="margin-bottom:12px">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </button>
+                <div id="report-content"></div>
+            </div>
+        </div>
+
+        <!-- SELECTION VIEW -->
+        <div id="view-selection" class="view">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+                <h2 style="margin:0">Por Artículos</h2>
+                <div
+                    style="background:var(--primary); color:white; padding:4px 12px; border-radius:20px; font-size:0.8rem; font-weight:700">
+                    <span id="sel-count">0</span>
+                </div>
+            </div>
+            <input type="text" id="sel-q" placeholder="Buscar..." oninput="renderSelection()">
+            <select id="sel-rubro" onchange="renderSelection()">
+                <option value="">Todos los rubros</option>
+            </select>
+            <div class="product-grid" id="sel-grid"></div>
+
+            <div style="position:fixed; bottom:80px; left:16px; right:16px; z-index:900">
+                <button class="btn btn-danger" onclick="generatePdf()" id="btn-gen-pdf">
+                    <i class="fas fa-file-pdf"></i> DESCARGAR SELECCIÓN
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="nav-bar" id="main-nav" style="display:none">
+        <a href="#" class="nav-item active" onclick="switchView('dashboard', this)">
+            <i class="fas fa-chart-pie"></i><span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" onclick="switchView('catalog', this)">
+            <i class="fas fa-search"></i><span>Catálogo</span>
+        </a>
+        <a href="#" class="nav-item" onclick="switchView('selection', this)">
+            <i class="fas fa-list-check"></i><span>Selección</span>
+        </a>
+        <a href="#" class="nav-item" onclick="switchView('reports', this)">
+            <i class="fas fa-file-lines"></i><span>Informes</span>
+        </a>
+    </nav>
+
+    <script>
+        let serverUrl = localStorage.getItem('distriluk_server_url') || '';
+        let allProducts = [];
+        let allRubros = [];
+        let selectedCodes = new Set();
+
+        if (serverUrl) {
+            document.getElementById('server-url-input').value = serverUrl;
+        }
+
+        async function connect() {
+            let url = document.getElementById('server-url-input').value.trim();
+            if (!url) return alert('Ingresa una URL');
+            if (!url.startsWith('http')) url = 'http://' + url;
+            if (url.endsWith('/')) url = url.slice(0, -1);
+
+            serverUrl = url;
+            showLoading(true, 'Conectando...');
+            try {
+                const test = await fetch(serverUrl + '/api/catalog');
+                if (!test.ok) throw new Error('Servidor no responde');
+
+                localStorage.setItem('distriluk_server_url', serverUrl);
+                document.getElementById('status-dot').style.background = 'var(--success)';
+                document.getElementById('main-nav').style.display = 'flex';
+                await init();
+                switchView('dashboard');
+            } catch (e) {
+                alert('Error de conexión: ' + e.message);
+                document.getElementById('status-dot').style.background = 'var(--danger)';
+            }
+            showLoading(false);
+        }
+
+        function disconnect() {
+            localStorage.removeItem('distriluk_server_url');
+            location.reload();
+        }
+
+        async function fetchData(endpoint) {
+            const res = await fetch(serverUrl + '/api/' + endpoint);
+            return await res.json();
+        }
+
+        async function init() {
+            try {
+                allProducts = await fetchData('catalog');
+                allRubros = await fetchData('rubros');
+                updateStats();
+                populateFilters();
+                renderCatalog();
+                renderSyncList();
+            } catch (e) {
+                console.error('Error init:', e);
+            }
+        }
+
+        function showLoading(show, text = 'Cargando...') {
+            document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
+            document.getElementById('loading-text').textContent = text;
+        }
+
+        function updateStats() {
+            document.getElementById('stat-total').textContent = allProducts.length;
+            document.getElementById('stat-rubros').textContent = allRubros.length;
+        }
+
+        function populateFilters() {
+            const options = '<option value="">Todos los rubros</option>' +
+                allRubros.map(r => `<option value="${r}">${r}</option>`).join('');
+            document.getElementById('catalog-rubro').innerHTML = options;
+            document.getElementById('sel-rubro').innerHTML = options;
+        }
+
+        function switchView(viewId, el) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+
+            if (el) {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                el.classList.add('active');
+            }
+
+            if (viewId === 'reports') loadReports();
+            if (viewId === 'selection') renderSelection();
+            window.scrollTo(0, 0);
+        }
+
+        function renderCatalog() {
+            const q = document.getElementById('catalog-q').value.toLowerCase();
+            const r = document.getElementById('catalog-rubro').value;
+            const grid = document.getElementById('catalog-grid');
+
+            const filtered = allProducts.filter(p => {
+                const matchesQ = !q || p.nombre.toLowerCase().includes(q) || p.codigo.toLowerCase().includes(q);
+                const matchesR = !r || p.categoria === r;
+                return matchesQ && matchesR;
+            }).slice(0, 100);
+
+            grid.innerHTML = filtered.map(p => renderProductCard(p)).join('');
+        }
+
+        function renderProductCard(p, selectable = false) {
+            const isSelected = selectedCodes.has(p.codigo);
+            return `
+                <div class="p-card ${selectable && isSelected ? 'selected' : ''}" ${selectable ? `onclick="toggleSelect('${p.codigo}')"` : ''}>
+                    <div class="select-badge"><i class="fas fa-check"></i></div>
+                    <div style="font-size:0.6rem; color:var(--primary); font-weight:700; text-transform:uppercase; margin-bottom:4px">${p.categoria}</div>
+                    <img src="${serverUrl}/data/${p.imagenLocal ? p.imagenLocal.replace(/\\/g, '/') : ''}" onerror="this.src='https://via.placeholder.com/150'">
+                    <div class="code">COD: ${p.codigo}</div>
+                    <div class="name">${p.nombre}</div>
+                    <div class="price">${p.precio}</div>
+                </div>
+            `;
+        }
+
+        function renderSyncList() {
+            const list = document.getElementById('sync-rubro-list');
+            list.innerHTML = allRubros.map(r => `
+                <div class="rubro-item">
+                    <input type="checkbox" value="${r}" checked>
+                    <label>${r}</label>
+                </div>
+            `).join('');
+        }
+
+        async function startSync() {
+            const rubros = Array.from(document.querySelectorAll('#sync-rubro-list input:checked')).map(i => i.value);
+            if (rubros.length === 0) return alert('Selecciona al menos un rubro');
+
+            if (!confirm('¿Iniciar descarga en la PC?')) return;
+
+            showLoading(true, 'Iniciando sincronización...');
+            const res = await fetch(serverUrl + '/api/sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rubros })
+            });
+            const data = await res.json();
+            showLoading(false);
+            alert(data.message);
+        }
+
+        async function startIntegrity() {
+            if (!confirm('¿Iniciar verificación de imágenes en la PC?')) return;
+            showLoading(true, 'Iniciando integridad...');
+            const res = await fetch(serverUrl + '/api/integrity', { method: 'POST' });
+            const data = await res.json();
+            showLoading(false);
+            alert(data.message);
+        }
+
+        async function loadReports() {
+            const list = document.getElementById('reports-list');
+            list.innerHTML = 'Cargando informes...';
+            const reports = await fetchData('reports');
+            list.innerHTML = reports.map(r => `
+                <div class="card" onclick="showReport('${r.name}')">
+                    <div style="display:flex; justify-content:space-between; align-items:center">
+                        <div>
+                            <div style="font-weight:700">${r.name}</div>
+                            <div style="font-size:0.8rem; color:var(--secondary)">${new Date(r.date).toLocaleString()}</div>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color:#cbd5e1"></i>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function showReport(name) {
+            showLoading(true);
+            const data = await fetchData('reports/' + name);
+            document.getElementById('reports-list').style.display = 'none';
+            const detail = document.getElementById('report-detail');
+            detail.style.display = 'block';
+
+            let html = `<h3>Informe: ${name}</h3>`;
+            if (data.new.length) html += `<h4>Nuevos (${data.new.length})</h4>${renderReportTable(data.new)}`;
+            if (data.modified.length) html += `<h4>Modificados (${data.modified.length})</h4>${renderReportTable(data.modified.map(m => ({ ...m.item, old: m.oldPrice })), true)}`;
+
+            document.getElementById('report-content').innerHTML = html;
+            showLoading(false);
+        }
+
+        function renderReportTable(items, mod = false) {
+            return `
+                <div class="card" style="padding:0; overflow-x:auto">
+                    <table>
+                        <thead><tr><th>Código</th><th>Nombre</th><th>Precio</th></tr></thead>
+                        <tbody>
+                            ${items.map(it => `
+                                <tr>
+                                    <td>${it.codigo}</td>
+                                    <td>${it.nombre}</td>
+                                    <td>${mod ? `<span style="text-decoration:line-through; font-size:0.7rem">${it.old}</span> → ` : ''}${it.precio}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function closeReport() {
+            document.getElementById('reports-list').style.display = 'block';
+            document.getElementById('report-detail').style.display = 'none';
+        }
+
+        function renderSelection() {
+            const q = document.getElementById('sel-q').value.toLowerCase();
+            const r = document.getElementById('sel-rubro').value;
+            const grid = document.getElementById('sel-grid');
+
+            const filtered = allProducts.filter(p => {
+                const matchesQ = !q || p.nombre.toLowerCase().includes(q) || p.codigo.toLowerCase().includes(q);
+                const matchesR = !r || p.categoria === r;
+                return matchesQ && matchesR;
+            }).slice(0, 100);
+
+            grid.innerHTML = filtered.map(p => renderProductCard(p, true)).join('');
+            document.getElementById('sel-count').textContent = selectedCodes.size;
+        }
+
+        function toggleSelect(code) {
+            if (selectedCodes.has(code)) selectedCodes.delete(code);
+            else selectedCodes.add(code);
+            renderSelection();
+        }
+
+        async function generatePdf() {
+            if (selectedCodes.size === 0) return alert('Selecciona al menos un artículo');
+
+            const items = allProducts.filter(p => selectedCodes.has(p.codigo));
+            const rubros = [...new Set(items.map(p => p.categoria))];
+
+            showLoading(true, 'Generando PDF para descargar...');
+            try {
+                const res = await fetch(serverUrl + '/api/pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items, rubros, name: 'Catalogo_Seleccion' })
+                });
+
+                if (!res.ok) throw new Error('Error al generar PDF');
+
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Catalogo_Seleccion.pdf';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+            showLoading(false);
+        }
+
+        async function downloadSelectedRubrosPdf() {
+            const rubros = Array.from(document.querySelectorAll('#sync-rubro-list input:checked')).map(i => i.value);
+            if (rubros.length === 0) return alert('Selecciona al menos un rubro');
+
+            showLoading(true, 'Generando PDF...');
+            try {
+                const items = allProducts.filter(p => rubros.includes(p.categoria));
+                const res = await fetch(serverUrl + '/api/pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items, rubros, name: 'Catalogo_Rubros' })
+                });
+
+                if (!res.ok) throw new Error('Error al generar PDF');
+
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Catalogo_Rubros.pdf';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+            showLoading(false);
+        }
+
+        async function downloadCurrentRubroPdf() {
+            const r = document.getElementById('catalog-rubro').value;
+            if (!r) return alert('Selecciona un rubro específico para descargar su PDF');
+
+            showLoading(true, 'Generando PDF del rubro...');
+            try {
+                const res = await fetch(serverUrl + '/api/pdf/category/' + encodeURIComponent(r));
+                if (!res.ok) throw new Error('Error al descargar PDF');
+
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Catalogo_' + r.replace(/\s+/g, '_') + '.pdf';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+            showLoading(false);
+        }
+    </script>
+</body>
+
+</html>

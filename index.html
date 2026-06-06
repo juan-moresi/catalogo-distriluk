@@ -328,6 +328,39 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* Zoom Modal */
+        #zoom-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            padding: 20px;
+        }
+
+        #zoom-modal img {
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        #zoom-modal .close-zoom {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 </head>
 
@@ -335,6 +368,11 @@
     <div id="loading-overlay">
         <div class="spinner"></div>
         <div id="loading-text">Cargando...</div>
+    </div>
+
+    <div id="zoom-modal" onclick="closeZoom()">
+        <div class="close-zoom">&times;</div>
+        <img id="zoom-img" src="" onclick="event.stopPropagation()">
     </div>
 
     <header>
@@ -602,16 +640,29 @@
 
         function renderProductCard(p, selectable = false) {
             const isSelected = selectedCodes.has(p.codigo);
+            const imgUrl = p.imagenLocal ? `${serverUrl}/data/${p.imagenLocal.replace(/\\/g, '/')}` : 'https://via.placeholder.com/150';
+
             return `
-                <div class="p-card ${selectable && isSelected ? 'selected' : ''}" ${selectable ? `onclick="toggleSelect('${p.codigo}')"` : ''}>
+                <div class="p-card ${selectable && isSelected ? 'selected' : ''}" ${selectable ? `onclick="toggleSelect('${p.codigo}')"` : `onclick="openZoom('${imgUrl}')"`}>
                     <div class="select-badge"><i class="fas fa-check"></i></div>
                     <div style="font-size:0.6rem; color:var(--primary); font-weight:700; text-transform:uppercase; margin-bottom:4px">${p.categoria}</div>
-                    <img src="${serverUrl}/data/${p.imagenLocal ? p.imagenLocal.replace(/\\/g, '/') : ''}" onerror="this.src='https://via.placeholder.com/150'">
+                    <img src="${imgUrl}" onerror="this.src='https://via.placeholder.com/150'">
                     <div class="code">COD: ${p.codigo}</div>
                     <div class="name">${p.nombre}</div>
                     <div class="price">${p.precio}</div>
                 </div>
             `;
+        }
+
+        function openZoom(src) {
+            const modal = document.getElementById('zoom-modal');
+            const img = document.getElementById('zoom-img');
+            img.src = src;
+            modal.style.display = 'flex';
+        }
+
+        function closeZoom() {
+            document.getElementById('zoom-modal').style.display = 'none';
         }
 
         function renderSyncList() {

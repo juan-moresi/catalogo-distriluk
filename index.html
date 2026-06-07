@@ -537,13 +537,23 @@
             if (!url.startsWith('http')) url = 'http://' + url;
             if (url.endsWith('/')) url = url.slice(0, -1);
 
+            // Verificar Mixed Content si estamos en GitHub (HTTPS)
+            if (window.location.protocol === 'https:' && url.startsWith('http:')) {
+                if (!confirm('ADVERTENCIA: Estás en una página segura (HTTPS) tratando de conectar a un servidor no seguro (HTTP). Es probable que el navegador bloquee la conexión. ¿Deseas intentar de todas formas?')) {
+                    return;
+                }
+            }
+
             serverUrl = url;
             showLoading(true, 'Conectando...');
             try {
                 const test = await fetch(serverUrl + '/api/catalog', {
                     headers: { 'Bypass-Tunnel-Reminder': 'true' }
                 });
-                if (!test.ok) throw new Error('Servidor no responde');
+                if (!test.ok) {
+                    const errorData = await test.json().catch(() => ({}));
+                    throw new Error(errorData.error || errorData.message || 'Servidor no responde (Status: ' + test.status + ')');
+                }
 
                 localStorage.setItem('distriluk_server_url', serverUrl);
                 document.getElementById('status-dot').style.background = 'var(--success)';
@@ -551,7 +561,7 @@
                 await init();
                 switchView('dashboard');
             } catch (e) {
-                alert('Error de conexión: ' + e.message);
+                alert('Error de conexión: ' + (e.message || 'Error desconocido'));
                 document.getElementById('status-dot').style.background = 'var(--danger)';
             }
             showLoading(false);
@@ -707,9 +717,9 @@
                     body: JSON.stringify({ rubros, skipImages })
                 });
                 const data = await res.json();
-                alert(data.message);
+                alert(data.message || data.error || 'Operación completada');
             } catch (e) {
-                alert('Error: ' + e.message);
+                alert('Error: ' + (e.message || 'Error desconocido'));
             }
             showLoading(false);
         }
@@ -717,13 +727,17 @@
         async function startIntegrity() {
             if (!confirm('¿Iniciar verificación de imágenes en la PC?')) return;
             showLoading(true, 'Iniciando integridad...');
-            const res = await fetch(serverUrl + '/api/integrity', {
-                method: 'POST',
-                headers: { 'Bypass-Tunnel-Reminder': 'true' }
-            });
-            const data = await res.json();
+            try {
+                const res = await fetch(serverUrl + '/api/integrity', {
+                    method: 'POST',
+                    headers: { 'Bypass-Tunnel-Reminder': 'true' }
+                });
+                const data = await res.json();
+                alert(data.message || data.error || 'Verificación completada');
+            } catch (e) {
+                alert('Error: ' + (e.message || 'Error desconocido'));
+            }
             showLoading(false);
-            alert(data.message);
         }
 
         async function loadReports() {
